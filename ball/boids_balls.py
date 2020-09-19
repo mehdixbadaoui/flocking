@@ -9,8 +9,11 @@ pygame.init()
 size = width, height = 800, 600
 black = 0, 0, 0
 
-maxVelocity = 2
-numBoids = 15
+finishX = 700
+finishY = 500
+
+maxVelocity = 3
+numBoids = 20
 numObs = 2
 boids = []
 
@@ -21,6 +24,7 @@ class Boid:
         self.velocityX = random.randint(1, 10) / 10.0
         self.velocityY = random.randint(1, 10) / 10.0
         self.isMouse = False
+        self.captured = False
 
     "Return the distance from another boid"
     def distance(self, boid):
@@ -38,7 +42,11 @@ class Boid:
         for boid in boids:
             if boid.x == self.x and boid.y == self.y:
                 continue
-                
+            if boid.isMouse:
+                boid.velocityX += numBoids / 2
+                boid.velocityY += numBoids / 2
+
+
             avgX += (self.x - boid.x)
             avgY += (self.y - boid.y)
 
@@ -59,8 +67,8 @@ class Boid:
                 
         for boid in boids:
             if boid.isMouse:
-                boid.velocityX *= 50
-                boid.velocityY *= 50
+                boid.velocityX += numBoids
+                boid.velocityY += numBoids
 
             avgX += boid.velocityX
             avgY += boid.velocityY
@@ -68,9 +76,10 @@ class Boid:
         avgX /= len(boids)
         avgY /= len(boids)
 
-        # set our velocity towards the others
-        self.velocityX += (avgX / 40)
-        self.velocityY += (avgY / 40)
+        if not self.isMouse:
+            # set our velocity towards the others
+            self.velocityX += (avgX / 40)
+            self.velocityY += (avgY / 40)
 
     
     "Move away from a set of boids. This avoids crowding"
@@ -100,8 +109,8 @@ class Boid:
         if numClose == 0:
             return
             
-        self.velocityX -= distanceX / 7
-        self.velocityY -= distanceY / 7
+        self.velocityX -= distanceX / 10
+        self.velocityY -= distanceY / 10
         
     "Perform actual movement based on our velocity"
     def move(self):
@@ -122,15 +131,21 @@ class Obstacle:
 obstacles = [Obstacle(200,200), Obstacle(400,400), Obstacle(600,600)]
 
 screen = pygame.display.set_mode(size)
+background_image = pygame.image.load("grass.jpg")
 
-ball = pygame.image.load("ball.png")
-pig = pygame.image.load("pig.png")
-ballrect = ball.get_rect()
-pigrect = pig.get_rect()
+sheep = pygame.image.load("sheep.png")
+tree = pygame.image.load("tree.png")
+dog = pygame.image.load("dog.png")
+fence = pygame.image.load("fence.png")
+
+sheeprect = sheep.get_rect()
+treerect = tree.get_rect()
+dogrect = dog.get_rect()
+fencerect = fence.get_rect()
 
 # create boids at random positions
 for i in range(numBoids):
-    boids.append(Boid(random.randint(0, width), random.randint(0, height)))
+    boids.append(Boid(random.randint(0, width*0.9), random.randint(0, height*0.9)))
 
 for i in range(numObs):
     obstacles.append(Obstacle(random.randint(0, width), random.randint(0, height)))
@@ -142,6 +157,7 @@ while 1:
     for boid in boids:
         closeBoids = []
         closeObs = []
+
         for otherBoid in boids:
             if otherBoid == boid: continue
             distance = boid.distance(otherBoid)
@@ -151,9 +167,7 @@ while 1:
         Mouse_x, Mouse_y = pygame.mouse.get_pos()
         mouse = Boid(Mouse_x, Mouse_y)
         mouse.isMouse = True
-        distance = boid.distance(mouse)
-        if distance < 200:
-            closeBoids.append(mouse)
+        closeBoids.append(mouse)
 
         for obs in obstacles:
             distance = boid.distance(obs)
@@ -163,34 +177,56 @@ while 1:
         boid.moveCloser(closeBoids)
         boid.moveWith(closeBoids)
         boid.moveAway(closeBoids, 20)
-        boid.moveAway(closeObs, 30)
+        boid.moveAway(closeObs, 35)
+
+
+        #print(avgX, ",",avgY, " - ", pygame.mouse.get_pos())
 
         # ensure they stay within the screen space
         # if we roubound we can lose some of our velocity
-        border = 25
-        if boid.x < border and boid.velocityX < 0:
+        borderX = 25
+        borderY = 25
+        if boid.x > finishX and boid.y > finishY:
+            boid.captured = True
+            borderX = width * 0.9
+            borderY = height * 0.9
+
+        if boid.x < borderX and boid.velocityX < 0:
             boid.velocityX = -boid.velocityX * random.random()
-        if boid.x > width - border and boid.velocityX > 0:
+        if boid.x > width - 25 and boid.velocityX > 0:
             boid.velocityX = -boid.velocityX * random.random()
-        if boid.y < border and boid.velocityY < 0:
+        if boid.y < borderY and boid.velocityY < 0:
             boid.velocityY = -boid.velocityY * random.random()
-        if boid.y > height - border and boid.velocityY > 0:
+        if boid.y > height - 25 and boid.velocityY > 0:
             boid.velocityY = -boid.velocityY * random.random()
-            
+
         boid.move()
-        
-    screen.fill(black)
+
+
+    # screen.fill()
+    screen.blit(background_image, [0, 0])
     for boid in boids:
-        boidRect = pygame.Rect(ballrect)
+        boidRect = pygame.Rect(sheeprect)
         boidRect.x = boid.x
         boidRect.y = boid.y
-        screen.blit(ball, boidRect)
+        screen.blit(sheep, boidRect)
 
     for obs in obstacles:
-        pigRect = pygame.Rect(pigrect)
-        pigRect.x = obs.x
-        pigRect.y = obs.y
-        screen.blit(pig, pigRect)
+        treeRect = pygame.Rect(treerect)
+        treeRect.x = obs.x
+        treeRect.y = obs.y
+        screen.blit(tree, treeRect)
 
+    dogRect = pygame.Rect(dogrect)
+    dogRect.x = Mouse_x
+    dogRect.y = Mouse_y
+    screen.blit(dog, dogRect)
+
+    fenceRect = pygame.Rect(fencerect)
+    fenceRect.x = 720
+    fenceRect.y = 540
+    screen.blit(fence, fenceRect)
+
+    pygame.mouse.set_visible(False)
     pygame.display.flip()
     pygame.time.delay(10)
