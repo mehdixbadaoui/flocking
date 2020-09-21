@@ -143,6 +143,11 @@ treerect = tree.get_rect()
 dogrect = dog.get_rect()
 fencerect = fence.get_rect()
 
+font = pygame.font.Font('freesansbold.ttf', 50)
+text = font.render('LEVEL COMPLETE!', True, (255, 255, 255))
+textRect = text.get_rect()
+textRect.center = (400, 300)
+
 # create boids at random positions
 for i in range(numBoids):
     boids.append(Boid(random.randint(0, width*0.9), random.randint(0, height*0.9)))
@@ -201,6 +206,11 @@ while 1:
             boid.velocityY = -boid.velocityY * random.random()
 
         boid.move()
+        allCaptured = True
+        for b in boids:
+            if boid.isMouse: continue
+            if not b.captured: allCaptured = False
+
 
 
     # screen.fill()
@@ -226,6 +236,10 @@ while 1:
     fenceRect.x = 720
     fenceRect.y = 540
     screen.blit(fence, fenceRect)
+
+    if allCaptured:
+        screen.blit(text, textRect)
+
 
     pygame.mouse.set_visible(False)
     pygame.display.flip()
