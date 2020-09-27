@@ -228,6 +228,7 @@ while 1:
         see_flock = len(closeBoids) > 0
         see_nothing = not see_flock and not see_shepard
 
+        #AUTOMATE ICI
         if boid.state == 'stand':
             if see_shepard:
                 to_follow = {mouse}
