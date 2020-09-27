@@ -1,0 +1,4 @@
+modification du code boids en ajoutant la souris comme cible et des obstacles dans la map
+les boids suivront cette cible tout en évitant les obstacles.
+implémentation de la notion d'automate qui permet a  un boid de cycler entre les états
+stationnaire, suivre la cible, suivre le flock.
