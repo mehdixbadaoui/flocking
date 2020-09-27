@@ -128,10 +128,39 @@ class Obstacle:
         self.y = y
 
 
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def isOver(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+
+        return False
+
 obstacles = [Obstacle(200,200), Obstacle(400,400), Obstacle(600,600)]
 
 screen = pygame.display.set_mode(size)
-background_image = pygame.image.load("grass.jpg")
+background_image = pygame.image.load("D:/Documents/UNI/IA/boids/ball/grass.jpg")
 
 sheep = pygame.image.load("sheep.png")
 tree = pygame.image.load("tree.png")
@@ -148,6 +177,19 @@ text = font.render('LEVEL COMPLETE!', True, (255, 255, 255))
 textRect = text.get_rect()
 textRect.center = (400, 300)
 
+restart_button = button((255, 255, 255), 300, 450, 200, 100, 'RESTART')
+
+def restart():
+
+    boids = []
+    obstacles = [Obstacle(200,200), Obstacle(400,400), Obstacle(600,600)]
+    for i in range(numBoids):
+        boids.append(Boid(random.randint(0, width * 0.9), random.randint(0, height * 0.9)))
+
+    for i in range(numObs):
+        obstacles.append(Obstacle(random.randint(0, width), random.randint(0, height)))
+
+    print("restarting")
 # create boids at random positions
 for i in range(numBoids):
     boids.append(Boid(random.randint(0, width*0.9), random.randint(0, height*0.9)))
@@ -155,7 +197,10 @@ for i in range(numBoids):
 for i in range(numObs):
     obstacles.append(Obstacle(random.randint(0, width), random.randint(0, height)))
 
+mouse_visible = False
+
 while 1:
+    pygame.mouse.set_visible(mouse_visible)
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
 
@@ -237,10 +282,25 @@ while 1:
     fenceRect.y = 540
     screen.blit(fence, fenceRect)
 
+    # print(pygame.mouse.get_pressed() == (1, 0, 0))
+
     if allCaptured:
         screen.blit(text, textRect)
+        boids = []
+        obstacles = [Obstacle(200,200), Obstacle(400,400), Obstacle(600,600)]
+        restart_button.draw(screen)
+        mouse_visible = True
 
+        if (pygame.mouse.get_pressed() == (1, 0, 0)):
+            if(restart_button.isOver(pygame.mouse.get_pos())):
+                for i in range(numBoids):
+                    boids.append(Boid(random.randint(0, width * 0.9), random.randint(0, height * 0.9)))
 
-    pygame.mouse.set_visible(False)
+                for i in range(numObs):
+                    obstacles.append(Obstacle(random.randint(0, width), random.randint(0, height)))
+
+                mouse_visible = False
+                restart()
+
     pygame.display.flip()
     pygame.time.delay(10)
